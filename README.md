@@ -16,5 +16,5 @@ Name of component | Circuit design | 3D model | Main trello card
 ---|:---:|:---:|:---:
 Alarm|[Alarm circuit](https://www.tinkercad.com/things/fJN1qCdbz30)|-|[Alarm trello card](https://trello.com/c/LlnBwmyV)
 Dispenser|[Dispenser circuit](https://www.tinkercad.com/things/jqC2W5Lvkbi)|[Dispenser 3D model](https://www.tinkercad.com/things/1V3eq8efXX8)|[Dispenser trello card](https://trello.com/c/LeTsud1A)
-User interface|-|-|[UI trello card](https://trello.com/c/sb3Jo5MM)
+User interface|[UI circuit](https://www.tinkercad.com/things/6h6syFR9VFH)|-|[UI trello card](https://trello.com/c/sb3Jo5MM)
 **Finished product**|-|-|[Main microcontroller card](https://trello.com/c/i19fujkw)
