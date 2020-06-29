@@ -7,8 +7,12 @@ int potValue; // Potentiometer value, will be the input value from the main cont
 Servo servos[5];
 const int SERVO_PINS[] = {3, 5, 6, 9, 10};
 
-void zeroOutServos() {
-  for (int i = 0; i < sizeof(servos)/sizeof(*servos); i++) { // would've used range-based for loop, but its not supported on C++98
+int i; // variable for loops
+
+void zeroOutServos() 
+{
+  for (i = 0; i < sizeof(servos)/sizeof(*servos); i++) // would've used range-based for loop, but its not supported on C++98
+  { 
     servos[i].write(0);
   }
 }
@@ -16,7 +20,8 @@ void zeroOutServos() {
 void setup() {
   pinMode(INPUT_PIN, INPUT);
   
-  for(int i = 0; i < sizeof(servos)/sizeof(*servos); i++) {
+  for(i = 0; i < sizeof(servos)/sizeof(*servos); i++) 
+  {
     pinMode(SERVO_PINS[i], OUTPUT);
     servos[i].attach(SERVO_PINS[i]);
   }
@@ -25,12 +30,14 @@ void setup() {
   zeroOutServos();
 }
 
-void dispensePill(int servoIndex) {
+void dispensePill(int servoIndex) 
+{
   servos[servoIndex].write((servos[servoIndex].read() == 180)?0:180);
   delay(1500);
 }
 
-void loop() { // For demo purposes, continuously rotates selected servo
+void loop() // For demo purposes, continuously rotates selected servo
+{ 
   potValue = analogRead(INPUT_PIN) >> 2;
   dispensePill(potValue * 5 / 255);
   delay(100);
