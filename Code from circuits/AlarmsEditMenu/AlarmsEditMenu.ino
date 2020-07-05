@@ -96,7 +96,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_C
 // Days of week
 //
 
-char weekLetters[] = {'M', 'T', 'W', 'H', 'F', 'S', 'U'};
+char weekLetters[] = {' ', 'M', 'T', 'W', 'H', 'F', 'S', 'U'};
 
 int toggleDayIndex;
 
@@ -326,7 +326,7 @@ bool waitForDayNum;
 
 void printWeekMenu() 
 {
-  sprintf(formatted," %c %c %c %c %c  %c %c ", weekLetters[0], weekLetters[1], weekLetters[2], weekLetters[3], weekLetters[4], weekLetters[5], weekLetters[6], weekLetters[7]);
+  sprintf(formatted," %c %c %c %c %c  %c %c ", weekLetters[1], weekLetters[2], weekLetters[3], weekLetters[4], weekLetters[5], weekLetters[6], weekLetters[7]);
   printToLCD(0, formatted);
   
   if (waitForDayNum) printToLCD(1, MSG_DAY_NUM);
@@ -349,11 +349,11 @@ void weekMenu(char key)
       weekMenu('~');
     
       break;
-    case '1': case '2': case '3': case '4': case '5': case '6':
-    case '7': 
+    case '1': case '2': case '3': case '4': 
+    case '5': case '6': case '7':
       if (waitForDayNum) 
       {
-      	toggleDayIndex = (key - '0') - 1; 
+      	toggleDayIndex = key - '0'; 
         waitForDayNum = false; confirm = true; 
       } 
       weekMenu('~'); 
