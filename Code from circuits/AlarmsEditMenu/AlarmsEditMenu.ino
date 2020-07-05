@@ -6,12 +6,16 @@
 #define LCD_ROWS 2
 #define LCD_COLS 16
 
-#define MSG_ERR_R1     "     Error!     "
+#define MSG_ERR_R1   "     Error!     "
 #define ERROR_VISIBILITY_TIMEOUT 2000
+
+#define MSG_ERR_DAY  "  Invalid day   "
+#define MSG_ERR_HOUR "  Invalid hour  "
+#define MSG_ERR_MIN  "Invalid minutes "
+#define MSG_ERR_DIS  "Invalid dispensr"
 
 /* Alarm menu */
 
-#define MSG_ALRM_R2    "a     C D      B"
 #define MSG_NO_ALRM_R1 "   No alarms    "
 #define MSG_NO_ALRM_R2 " #: Create new  "
 
@@ -171,17 +175,41 @@ void awaitValReset()
   awaitVal[AV_CONFIRM] = false, awaitVal[AV_AWAITING] = awaitingNothing, awaitVal[AV_VALUE] = -1; 
 }
 
-void setEditingNum(char *buffer, char key) 
+bool validateValue(int value) 
 {
-  if (*buffer > -1) 
+  switch(awaitVal[AV_AWAITING]) 
   {
-    *buffer *= 10;
-    *buffer += key - '0';
+    case awaitingDay:      return value >= 1 && value <= WEEK_LENGTH;
+    case awaitingHour:     return value >= 0 && value <= 23;
+    case awaitingMinutes:  return value >= 0 && value <= 59;
+    case awaitingDispenser:return value >= 0;
+  }
+}
+
+void setAVNum(char key) 
+{
+  if (validateValue((awaitVal[AV_VALUE] * 10) + (key - '0'))) 
+  {
+    awaitVal[AV_VALUE] *= 10;
+    awaitVal[AV_VALUE] += key - '0';
     editingSubMenu('#');
+  }
+  else if (awaitVal[AV_VALUE] < 0 && validateValue(key - '0')) 
+  {
+    awaitVal[AV_VALUE] = key - '0';
   }
   else 
   {
-    *buffer = key - '0';
+    switch(awaitVal[AV_AWAITING]) 
+    {
+      case awaitingDay: printErrorToLCD(MSG_ERR_DAY); break;
+      case awaitingHour: printErrorToLCD(MSG_ERR_HOUR); break;
+      case awaitingMinutes: printErrorToLCD(MSG_ERR_MIN); break;
+      case awaitingDispenser: printErrorToLCD(MSG_ERR_DIS); break;
+    }
+    
+    awaitValReset();
+    alarmMenu('~'); editingSubMenu('~');
   }
 }
 
@@ -189,13 +217,13 @@ void editingSubMenu(char key)
 {
   switch(key) 
   {
-    case 'A': awaitVal[AV_AWAITING] = awaitingDay; printToLCD(1, MSG_DAY_NUM); 
+    case 'A': awaitVal[AV_AWAITING] = awaitingDay; printToLCD(1, MSG_DAY_NUM);
       break;
     case '1': case '2': case '3': case '4': case '5': 
     case '6': case '7': case '8': case '9': case '0':
-      setEditingNum(&awaitVal[AV_VALUE], key);
-      
+   	  if (awaitVal[AV_AWAITING] != awaitingNothing) setAVNum(key);
       if (awaitVal[AV_AWAITING] == awaitingDay) editingSubMenu('#');
+    
       break;
     case 'B': awaitVal[AV_AWAITING] = awaitingHour; printToLCD(1, MSG_HOUR); break;
     case 'C':
@@ -285,7 +313,7 @@ void alarmMenu(char key)
     case '#': 
       alarmIndex = firstEmptyAlarmIndex();
       menu = editingSubMenu; 
-      alarmMenu('~'); menu('~');
+      alarmMenu('~'); menu('D');
       break;
     case '*': alarmIndex = 0; menu = mainMenu; menu('~'); break;
     case '~': printAlarmMenu(); break;
