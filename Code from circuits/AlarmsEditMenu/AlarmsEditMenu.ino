@@ -140,24 +140,22 @@ bool confirm;
 
 char formatted[LCD_COLS + 1];
 int alarmIndex;
-bool editing;
 
-bool awaitingHour;
-int tmpHour = -1;
-bool awaitingMinutes;
-int tmpMin = -1;
-bool awaitingDispenser;
-int tmpDis = -1;
-bool deletion;
+enum awaitingValue {
+  awaitingNothing = -1, awaitingHour, awaitingMinutes, awaitingDispenser, awaitingDeletion
+};
 
-void resetEditingValues(bool skipValues) {
-  if (!skipValues) {
-    tmpHour = -1, tmpMin = -1, tmpDis = -1;   
-  }
-  awaitingHour = false, awaitingMinutes = false, awaitingDispenser = false, deletion = false, confirm = false;
+#define AV_CONFIRM 0
+#define AV_AWAITING 1
+#define AV_VALUE 2
+
+char awaitVal[3] = {false, awaitingNothing, -1};
+
+void awaitValReset() {
+  awaitVal[AV_CONFIRM] = false, awaitVal[AV_AWAITING] = awaitingNothing, awaitVal[AV_VALUE] = -1; 
 }
 
-void setEditingNum(int *buffer, char key, int row) {
+void setEditingNum(char *buffer, char key, int row) {
   if (*buffer > -1) {
     *buffer *= 10;
     *buffer += key - '0';
@@ -173,63 +171,44 @@ void editingSubMenu(char key, int row) {
     case 'A': menu = weekMenu; menu('~'); 
       break;
     case '1': case '2': case '3': case '4': case '5': 
-    case '6': case '7': case '8': case '9': 
-    case '0':
-   	  if (awaitingHour) 
-      {
-        setEditingNum(&tmpHour, key, row);
-      } 
-      else if (awaitingMinutes) {
-      	setEditingNum(&tmpMin, key, row);
-      }
-      else if (awaitingDispenser) {
-      	setEditingNum(&tmpDis, key, row);
-      }
+    case '6': case '7': case '8': case '9': case '0':
+   	  setEditingNum(&awaitVal[AV_VALUE], key, row);
     
       break;
-    case 'B': awaitingHour = true; printToLCD(row, MSG_HOUR); break;
+    case 'B': awaitVal[AV_AWAITING] = awaitingHour; printToLCD(row, MSG_HOUR); break;
     case 'C':
-      if (confirm) {
+      if (awaitVal[AV_CONFIRM]) {
         editingSubMenu('*');
       } 
       else {
-        awaitingMinutes = true;
+        awaitVal[AV_AWAITING] = awaitingMinutes;
         printToLCD(row, MSG_MINUTES);
       }
     
       break;
-    case 'D': awaitingDispenser = true; printToLCD(row, MSG_DISPENSER); break;
+    case 'D': awaitVal[AV_AWAITING] = awaitingDispenser; printToLCD(row, MSG_DISPENSER); break;
     case '#':
-      if (!awaitingHour && !awaitingMinutes && !awaitingDispenser && !deletion) {
-        resetEditingValues(false);
-      	deletion = true;
-        printToLCD(row, MSG_CONFIRM);
-        break;
+      if (awaitVal[AV_AWAITING] == awaitingNothing) {
+        awaitVal[AV_AWAITING] = awaitingDeletion;
       }
-    
-      if (deletion) {
-      	alarms[alarmIndex].dispenserId = -1;
-        resetEditingValues(false);
-        alarmIndex = firstFreeAlarmIndex();
+      
+      if (awaitVal[AV_CONFIRM]) {
+        switch(awaitVal[AV_AWAITING]) {
+          case awaitingHour: alarms[alarmIndex].hour = awaitVal[AV_VALUE]; break;
+          case awaitingMinutes: alarms[alarmIndex].minutes = awaitVal[AV_VALUE]; break;
+          case awaitingDeletion:
+          case awaitingDispenser: alarms[alarmIndex].dispenserId = awaitVal[AV_VALUE]; break;
+        }
+        awaitValReset();
         editingSubMenu('*', row);
       }
-      else if (confirm) {
-        if(tmpHour != -1) alarms[alarmIndex].hour = tmpHour;
-        if(tmpMin != -1) alarms[alarmIndex].minutes = tmpMin;
-        if(tmpDis != -1) alarms[alarmIndex].dispenserId = tmpDis;
-        
-        resetEditingValues(false);
-        alarmMenu('~');
-        editingSubMenu('~');
-      }
       else {
-        resetEditingValues(true);
-        confirm = true;
+        awaitVal[AV_CONFIRM] = true;
         printToLCD(row, MSG_CONFIRM);
       }
     
       break;
-    case '*': resetEditingValues(false); menu = alarmMenu; menu('~'); break;
+    case '*': awaitValReset(); menu = alarmMenu; menu('~'); break;
     case '~': printToLCD(row, MSG_EDIT_TOOLS); break;
   }
 }
@@ -249,10 +228,8 @@ void printAlarmMenu() {
     snprintf(formatted, LCD_COLS + 1, "%02i  %c  %02i:%02i  %i ", alarmIndex, *alarms[alarmIndex].day, alarms[alarmIndex].hour, alarms[alarmIndex].minutes, alarms[alarmIndex].dispenserId);
     printToLCD(0, formatted);
     
-    if (!editing) {
-      snprintf(formatted, LCD_COLS + 1, "%c        C     %c", (alarmIndex > 0) ? 'A' : 'a' , (alarmIndex < firstFreeAlarmIndex()) ? 'B' : 'b');
-      printToLCD(1, formatted);
-    }
+    snprintf(formatted, LCD_COLS + 1, "%c        C     %c", (alarmIndex > 0) ? 'A' : 'a' , (alarmIndex < firstFreeAlarmIndex()) ? 'B' : 'b');
+    printToLCD(1, formatted);
   }
 }
 
@@ -274,7 +251,7 @@ void alarmMenu(char key) {
       break;
     case 'C': menu = editingSubMenu; menu('~'); break;
     case '#': 
-      //menu = editingSubMenu; 
+      menu = editingSubMenu; 
       break;
     case '*': menu = mainMenu; menu('~'); break;
     case '~': alarmIndex = firstFreeAlarmIndex(); printAlarmMenu(); break;
