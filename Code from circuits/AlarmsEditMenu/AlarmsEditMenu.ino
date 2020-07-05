@@ -6,7 +6,7 @@
 #define LCD_ROWS 2
 #define LCD_COLS 16
 
-#define MSG_ERR_R1      "     Error!     "
+#define MSG_ERR_R1     "     Error!     "
 #define ERROR_VISIBILITY_TIMEOUT 2000
 
 /* Alarm menu */
@@ -99,8 +99,8 @@ int toggleDayIndex;
 void toggleWeekDayEnable() 
 {
    weekLetters[toggleDayIndex] = (isupper(weekLetters[toggleDayIndex])) 
-     					 		 ? tolower(weekLetters[toggleDayIndex]) 
-     							 : toupper(weekLetters[toggleDayIndex]);
+     				 ? tolower(weekLetters[toggleDayIndex]) 
+     				 : toupper(weekLetters[toggleDayIndex]);
 }
 
 //
@@ -124,7 +124,8 @@ int firstEmptyAlarmIndex()
   return (i == sizeof(alarms)/sizeof(*alarms)) ? -1 : i;
 }
 
-int nextAlarmIndex(int currIndex) {
+int nextAlarmIndex(int currIndex) 
+{
   for(i = currIndex + 1; i < sizeof(alarms)/sizeof(*alarms); i++) 
   {
     if (alarms[i].dispenserId != -1) break;
@@ -132,7 +133,8 @@ int nextAlarmIndex(int currIndex) {
   return (i == sizeof(alarms)/sizeof(*alarms)) ? -1 : i;
 }
 
-int prevAlarmIndex(int currIndex) {
+int prevAlarmIndex(int currIndex) 
+{
   for(i = currIndex - 1; i >= 0; i--) 
   {
     if (alarms[i].dispenserId != -1) break;
@@ -153,60 +155,72 @@ int alarmIndex = -1;
 
 char formatted[LCD_COLS + 1];
 
-enum awaitingValue {
+enum awaitingValue 
+{
   awaitingNothing = -1, awaitingDay, awaitingHour, awaitingMinutes, awaitingDispenser, awaitingDeletion
 };
 
-#define AV_CONFIRM 0
+#define AV_CONFIRM  0
 #define AV_AWAITING 1
-#define AV_VALUE 2
+#define AV_VALUE    2
 
 char awaitVal[3] = {false, awaitingNothing, -1};
 
-void awaitValReset() {
+void awaitValReset() 
+{
   awaitVal[AV_CONFIRM] = false, awaitVal[AV_AWAITING] = awaitingNothing, awaitVal[AV_VALUE] = -1; 
 }
 
-void setEditingNum(char *buffer, char key, int row) {
-  if (*buffer > -1) {
+void setEditingNum(char *buffer, char key) 
+{
+  if (*buffer > -1) 
+  {
     *buffer *= 10;
     *buffer += key - '0';
-    editingSubMenu('#', row);
+    editingSubMenu('#');
   }
-  else {
+  else 
+  {
     *buffer = key - '0';
   }
 }
 
-void editingSubMenu(char key, int row) {
-  switch(key) {
-    case 'A': awaitVal[AV_AWAITING] = awaitingDay; printToLCD(row, MSG_DAY_NUM);
+void editingSubMenu(char key) 
+{
+  switch(key) 
+  {
+    case 'A': awaitVal[AV_AWAITING] = awaitingDay; printToLCD(1, MSG_DAY_NUM); 
       break;
     case '1': case '2': case '3': case '4': case '5': 
     case '6': case '7': case '8': case '9': case '0':
-   	  setEditingNum(&awaitVal[AV_VALUE], key, row);
-      if (awaitVal[AV_AWAITING] == awaitingDay) editingSubMenu('#', row);
-    
+      setEditingNum(&awaitVal[AV_VALUE], key);
+      
+      if (awaitVal[AV_AWAITING] == awaitingDay) editingSubMenu('#');
       break;
-    case 'B': awaitVal[AV_AWAITING] = awaitingHour; printToLCD(row, MSG_HOUR); break;
+    case 'B': awaitVal[AV_AWAITING] = awaitingHour; printToLCD(1, MSG_HOUR); break;
     case 'C':
-      if (awaitVal[AV_CONFIRM]) {
+      if (awaitVal[AV_CONFIRM]) 
+      {
         editingSubMenu('*');
       } 
-      else {
+      else 
+      {
         awaitVal[AV_AWAITING] = awaitingMinutes;
-        printToLCD(row, MSG_MINUTES);
+        printToLCD(1, MSG_MINUTES);
       }
     
       break;
-    case 'D': awaitVal[AV_AWAITING] = awaitingDispenser; printToLCD(row, MSG_DISPENSER); break;
+    case 'D': awaitVal[AV_AWAITING] = awaitingDispenser; printToLCD(1, MSG_DISPENSER); break;
     case '#':
-      if (awaitVal[AV_AWAITING] == awaitingNothing) {
+      if (awaitVal[AV_AWAITING] == awaitingNothing) 
+      {
         awaitVal[AV_AWAITING] = awaitingDeletion;
       }
       
-      if (awaitVal[AV_CONFIRM]) {
-        switch(awaitVal[AV_AWAITING]) {
+      if (awaitVal[AV_CONFIRM]) 
+      {
+        switch(awaitVal[AV_AWAITING]) 
+        {
           case awaitingDay: alarms[alarmIndex].day = &weekLetters[awaitVal[AV_VALUE]]; break;
           case awaitingHour: alarms[alarmIndex].hour = awaitVal[AV_VALUE]; break;
           case awaitingMinutes: alarms[alarmIndex].minutes = awaitVal[AV_VALUE]; break;
@@ -214,26 +228,24 @@ void editingSubMenu(char key, int row) {
           case awaitingDispenser: alarms[alarmIndex].dispenserId = awaitVal[AV_VALUE]; break;
         }
         awaitValReset();
-        editingSubMenu('*', row);
+        editingSubMenu('*');
       }
-      else {
+      else 
+      {
         awaitVal[AV_CONFIRM] = true;
-        printToLCD(row, MSG_CONFIRM);
+        printToLCD(1, MSG_CONFIRM);
       }
     
       break;
     case '*': awaitValReset(); menu = alarmMenu; menu('~'); break;
-    case '~': printToLCD(row, MSG_EDIT_TOOLS); break;
+    case '~': printToLCD(1, MSG_EDIT_TOOLS); break;
   }
-}
-
-void editingSubMenu(char key) {
-  editingSubMenu(key, 1);
 }
 
 /* Alarm menu */
 
-void printAlarmMenu() {
+void printAlarmMenu() 
+{
   if (alarmIndex < 0) 
   {
     printToLCD(0, MSG_NO_ALRM_R1);
@@ -249,17 +261,21 @@ void printAlarmMenu() {
   }
 }
 
-void alarmMenu(char key) {
-  switch(key) {
+void alarmMenu(char key) 
+{
+  switch(key) 
+  {
     case 'A':
-      if (prevAlarmIndex(alarmIndex) >= 0) {
+      if (prevAlarmIndex(alarmIndex) >= 0) 
+      {
         alarmIndex--; 
         printAlarmMenu(); 
       } 
     
       break; 
     case 'B': 
-      if (alarmIndex < nextAlarmIndex(alarmIndex)) { 
+      if (alarmIndex < nextAlarmIndex(alarmIndex)) 
+      { 
         alarmIndex++; 
         printAlarmMenu(); 
       } 
@@ -290,8 +306,6 @@ void printWeekMenu()
   else printToLCD(1, MSG_WEEK_TOGGLE);
 }
 
-
-
 void weekMenu(char key) 
 {  
   switch(key)
@@ -309,7 +323,7 @@ void weekMenu(char key)
       break;
     case '1': case '2': case '3': case '4': case '5': case '6':
     case '7': 
-   	  if (waitForDayNum) 
+      if (waitForDayNum) 
       {
       	toggleDayIndex = (key - '0') - 1; 
         waitForDayNum = false; confirm = true; 
@@ -347,6 +361,7 @@ void setup()
 }
 
 char key;
+
 void loop()
 {
   key = keypad.getKey(); // getKey function is too quick, once you get the key, the second time you get it it will return null
