@@ -54,9 +54,9 @@
 //Time in millisecconds between first and second alarm
 #define interval 10000
 
-#define ALARM_PIN     11
+#define ALARM_PIN     10
 #define BTN_PIN       12
-#define DISPENSER_PIN 10
+#define DISPENSER_PIN 11
 
 int i, j; //variables for loops
 
@@ -100,7 +100,7 @@ char keys[KEYPAD_ROWS][KEYPAD_COLS] =
   {'7','8','9','C'},
   {'*','0','#','D'}
 };
-byte rowPins[KEYPAD_ROWS] = {13, 12, 7, 6};
+byte rowPins[KEYPAD_ROWS] = {9, 8, 7, 6};
 byte colPins[KEYPAD_COLS] = {5, 4, 3, 2};
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
@@ -180,9 +180,19 @@ void alarm(unsigned long timeSinceActivation)
 
 void dispensePill(char dispenserNumber) {
   digitalWrite(DISPENSER_PIN, HIGH);
-  delayMicroseconds(dispenserNumber * 1000);
+  delay(dispenserNumber);
   digitalWrite(DISPENSER_PIN, LOW);
 }
+
+/* Tracking time */
+char maxDays[] = {-1, 31, 28, 31, 30, 31, 30, 31, 31, 30, 30, 30, 31};
+int hours = 9;
+int minutes = 15;
+int seconds = 0;
+int day = 31;
+int month = 7;
+int year = 2020;
+char time[17];
 
 //
 // Menus
@@ -353,7 +363,7 @@ void alarmMenu(char key)
       menu = editingSubMenu; 
       alarmMenu('~'); menu('D');
       break;
-    case '*': alarmIndex = 0; menu = mainMenu; menu('~'); break;
+    case '*': alarmIndex = 0; menu = alarmSettingsMenu; menu('~'); break;
     case '~': printAlarmMenu(); break;
   }
 }
@@ -397,20 +407,35 @@ void weekMenu(char key)
       weekMenu('~'); 
     
       break;
-    case '*': menu = mainMenu; menu('~'); break;
+    case '*': menu = alarmSettingsMenu; menu('~'); break;
     case '~': printWeekMenu();  break;
+  }
+}
+
+/* Alarm settings menu */
+
+void alarmSettingsMenu(char key) 
+{  
+  switch(key)
+  {
+    case 'A': menu = weekMenu; menu('~'); break;
+    case 'B': menu = alarmMenu; menu('~'); break;
+    case '~': printToLCD(0, MSG_MAIN_R1); printToLCD(1, MSG_MAIN_R2); break;
+    case '*': menu = mainMenu; menu('~'); break;
   }
 }
 
 /* Main menu */
 
-void mainMenu(char key) 
-{  
-  switch(key)
-  {
-    case 'A': menu = weekMenu; weekMenu('~'); break;
-    case 'B': menu = alarmMenu; alarmMenu('~'); break;
-    default: printToLCD(0, MSG_MAIN_R1); printToLCD(1, MSG_MAIN_R2); break;
+void mainMenu(char key) {
+  switch(key) {
+    case 'A': menu = alarmSettingsMenu; menu('~'); break;
+    case '~': 
+      snprintf(time,17,"    %02i:%02i:%02i    ", hours, minutes, seconds);
+ 	  printToLCD(0,time);
+    
+      snprintf(time,17,"   %02i/%02i/%04i   ", day, month, year);
+      printToLCD(1,time);
   }
 }
 
@@ -430,6 +455,10 @@ char key;
 
 void loop()
 {
+  if (menu == mainMenu) {
+    menu('~');
+  }
+  
   key = keypad.getKey(); // getKey function is too quick, once you get the key, the second time you get it it will return null
   if (key != '\0') 
   {
@@ -440,5 +469,28 @@ void loop()
     dispensePill(3); // dispense correct pill
     alarm(millis());
   }
-  delay(100); //TinkerCad optimization
+  delay(990);
+  
+  seconds++;
+
+  if(seconds > 59) {
+    seconds = 0;
+    minutes++;
+  }
+  if (minutes > 59) {
+    minutes = 0;
+    hours++;
+  }
+  if (hours > 23) {
+    hours = 0;
+    day++;
+  }
+  if (day > maxDays[month]) {
+    day = 1;
+    month++;
+  }
+  if (month > 12) {
+    month = 1;
+    year++;
+  }
 }
