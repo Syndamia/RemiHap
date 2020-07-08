@@ -189,7 +189,8 @@ char maxDays[] = {-1, 31, 28, 31, 30, 31, 30, 31, 31, 30, 30, 30, 31};
 int hours = 9;
 int minutes = 15;
 int seconds = 0;
-int day = 31;
+int day = 9;
+int weekdayIndex = 4;
 int month = 7;
 int year = 2020;
 char time[17];
@@ -368,6 +369,43 @@ void alarmMenu(char key)
   }
 }
 
+/* Weekday menu */
+
+char selWeekdayIndex;
+
+void printWeekdayMenu() {
+  if (confirm) {
+   	printToLCD(0, MSG_CONFIRM);
+  }
+  else {
+    printToLCD(0, MSG_DAY_NUM); 
+  }
+  printToLCD(1, "                ");
+}
+
+void weekdayMenu(char key) {
+  switch(key) {
+    case '1': case '2': case '3': case '4': 
+    case '5': case '6': case '7':
+      if(!confirm) {
+         selWeekdayIndex = key - '0';
+         confirm = true;
+         weekdayMenu('~');
+      }
+      break;
+    case '#':
+      if(confirm) {
+         confirm = false;
+         weekdayIndex = selWeekdayIndex;
+         weekdayMenu('*');
+      }
+      break;
+    case 'C': confirm = false; weekdayMenu('~'); break;
+    case '*': menu = mainMenu; menu('~'); break;
+    case '~': printWeekdayMenu(); break;
+  }
+}
+
 /* Week menu */
 
 bool waitForDayNum;
@@ -430,11 +468,12 @@ void alarmSettingsMenu(char key)
 void mainMenu(char key) {
   switch(key) {
     case 'A': menu = alarmSettingsMenu; menu('~'); break;
+    case 'B': menu = weekdayMenu; menu('~'); break;
     case '~': 
-      snprintf(time,17,"    %02i:%02i:%02i    ", hours, minutes, seconds);
+      snprintf(time,17,"    %02i:%02i:%02i  |A", hours, minutes, seconds);
  	  printToLCD(0,time);
     
-      snprintf(time,17,"   %02i/%02i/%04i   ", day, month, year);
+      snprintf(time,17," %c %02i/%02i/%04i |B", weekLetters[weekdayIndex], day, month, year);
       printToLCD(1,time);
   }
 }
@@ -487,7 +526,11 @@ void loop()
     }
     if (hours > 23) {
       hours = 0;
+      weekdayIndex++;
       day++;
+    }
+    if(weekdayIndex > 7) {
+      weekdayIndex = 1;
     }
     if (day > maxDays[month]) {
       day = 1;
