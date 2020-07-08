@@ -8,7 +8,7 @@
 #define LCD_COLS 16
 
 #define MSG_ERR_R1   "     Error!     "
-#define ERROR_VISIBILITY_TIMEOUT 2000
+#define ERROR_VISIBILITY_TIMEOUT 500
 
 #define MSG_ERR_DAY  "  Invalid day   "
 #define MSG_ERR_HOUR "  Invalid hour  "
@@ -453,6 +453,8 @@ void setup()
 
 char key;
 
+unsigned long lastTime;
+
 void loop()
 {
   if (menu == mainMenu) {
@@ -469,28 +471,31 @@ void loop()
     dispensePill(3); // dispense correct pill
     alarm(millis());
   }
-  delay(990);
+  delay(10);
   
-  seconds++;
+  if (millis() - lastTime >= 1000) {
+    lastTime = millis();
+    seconds++;
 
-  if(seconds > 59) {
-    seconds = 0;
-    minutes++;
-  }
-  if (minutes > 59) {
-    minutes = 0;
-    hours++;
-  }
-  if (hours > 23) {
-    hours = 0;
-    day++;
-  }
-  if (day > maxDays[month]) {
-    day = 1;
-    month++;
-  }
-  if (month > 12) {
-    month = 1;
-    year++;
+  	if(seconds > 59) {
+   	  seconds = 0;
+      minutes++;
+    }
+    if (minutes > 59) {
+      minutes = 0;
+      hours++;
+    }
+    if (hours > 23) {
+      hours = 0;
+      day++;
+    }
+    if (day > maxDays[month]) {
+      day = 1;
+      month++;
+    }
+    if (month > 12) {
+      month = 1;
+      year++;
+    }
   }
 }
