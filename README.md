@@ -9,7 +9,7 @@ Name | Link
 ---|:---:
 Public Trello board | [Trello board](https://trello.com/b/dQpEhmcC/remihap) 
 Project presentation | -
-Project documentation | -
+Project documentation | [File link](https://docs.google.com/document/d/1M2f8zgaGpL7tc2iuchSiHlVxBEBiluuPhpuySDdJaQU/edit?usp=sharing)
 
 
 Name of component | Circuit design | 3D model | Main trello card
