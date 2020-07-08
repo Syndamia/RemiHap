@@ -1,6 +1,5 @@
 #include <Keypad.h>
 #include <LiquidCrystal.h>
-#include <Adafruit_NeoPixel.h>
 
 // LCD
 
@@ -46,17 +45,9 @@
 #define ALARMS_PER_DAY 10
 #define WEEK_LENGTH 7
 
-//Defining the notes' frequencies for the melody
-#define NOTE_C5 523
-#define NOTE_D5 587
-#define NOTE_E5 659
-
-//Time in millisecconds between first and second alarm
-#define interval 10000
-
-#define ALARM_PIN     10
+#define ALARM_PIN     11
 #define BTN_PIN       12
-#define DISPENSER_PIN 11
+#define DISPENSER_PIN 10
 
 int i, j; //variables for loops
 
@@ -161,34 +152,32 @@ int prevAlarmIndex(int currIndex)
 
 /* Alarming */
 
-bool buttonIsPressed()
-{
-  return digitalRead(BTN_PIN);
+bool buttonIsPressed() {
+  return digitalRead(BTN_PIN); 
 }
 
-void alarm(unsigned long timeSinceActivation)
-{
-   while(buttonIsPressed())
-   {
-     digitalWrite(ALARM_PIN, HIGH);
-     delay(100);
-   }
+void alarm() {
+  while(buttonIsPressed()) {
+    digitalWrite(ALARM_PIN, HIGH);
+    delay(100);
+  }
   digitalWrite(ALARM_PIN, LOW);
 }
 
 /* Dispensing */
 
 void dispensePill(char dispenserNumber) {
-  digitalWrite(DISPENSER_PIN, HIGH);
-  delay(dispenserNumber);
-  digitalWrite(DISPENSER_PIN, LOW);
+   digitalWrite(DISPENSER_PIN, HIGH);
+   delay(dispenserNumber);
+   digitalWrite(DISPENSER_PIN, LOW);
 }
 
 /* Tracking time */
+
 char maxDays[] = {-1, 31, 28, 31, 30, 31, 30, 31, 31, 30, 30, 30, 31};
 int hours = 9;
 int minutes = 15;
-int seconds = 0;
+int seconds = 55;
 int day = 9;
 int weekdayIndex = 4;
 int month = 7;
@@ -482,9 +471,21 @@ void mainMenu(char key) {
 // Main logic
 //
 
+int getActiveAlarmIndex() {
+  for(i = 0; i < sizeof(alarms)/sizeof(*alarms); i++) {
+    if(*alarms[i].day == weekLetters[weekdayIndex] &&
+      	alarms[i].hour == hours &&
+      	alarms[i].minutes == minutes) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 void setup()
 {
   lcd.begin(LCD_COLS, LCD_ROWS);
+  pinMode(13, INPUT);
 
   menu = mainMenu;
   mainMenu('~');
@@ -505,11 +506,7 @@ void loop()
   {
     menu(key);
   }
-  else if(buttonIsPressed()) //TODO: if button is pressed AND time for alarm
-  {
-    dispensePill(3); // dispense correct pill
-    alarm(millis());
-  }
+  
   delay(10);
   
   if (millis() - lastTime >= 1000) {
@@ -519,6 +516,16 @@ void loop()
   	if(seconds > 59) {
    	  seconds = 0;
       minutes++;
+      
+      if (isupper(weekLetters[weekdayIndex])) {
+        i = getActiveAlarmIndex();
+        if(i > -1) {
+          dispensePill(alarms[i].dispenserId);
+          delay(3000);
+          seconds += 3;
+          alarm();
+        }
+      }
     }
     if (minutes > 59) {
       minutes = 0;
