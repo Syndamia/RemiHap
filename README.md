@@ -8,7 +8,7 @@ This is an exam project for IT-kariera Module 8 (Introduction to operating syste
 Name | Link
 ---|:---:
 Public Trello board | [Trello board](https://trello.com/b/dQpEhmcC/remihap) 
-Project presentation | -
+Project presentation | [File link](https://drive.google.com/file/d/1TrNkb-cYb4m7z9KgRGNpMY7lxU9YCdG2/view?usp=sharing)
 Project documentation | [File link](https://docs.google.com/document/d/1M2f8zgaGpL7tc2iuchSiHlVxBEBiluuPhpuySDdJaQU/edit?usp=sharing)
 
 
